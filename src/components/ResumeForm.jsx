@@ -1,9 +1,13 @@
 import { useState } from "react"
+import AnalyzeResult from "./AnalyzeResult"
+import { mockResumeResponse } from "../mockData"
+import LoadingSpinner from "./LoadingSpinner"
 
 export default function ResumeForm() {
     const [resumeFile, setResumeFile] = useState(null)
-    const [jobDescription, setJobDescription] = useState("")
+    const [jobDescription, setJobDescription] = useState(null)
     const [loading, setLoading] = useState(false)
+    const [result, setResult] = useState(null)
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -15,7 +19,21 @@ export default function ResumeForm() {
 
         try{
             setLoading(true)
-            console.log("Submitting form with:", { resumeFile, jobDescription })
+
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            setResult(mockResumeResponse)
+            console.log("Form submission result: ", mockResumeResponse)
+            // const formData = new FormData()
+            // formData.append("resume", resumeFile)
+            // formData.append("jd_text", jobDescription)
+
+            // const response = await fetch("http://127.0.0.1:8000/api/v1/resumes/analyze_resume", {
+            //     method: "POST",
+            //     body: formData
+            // })
+            // const res = await response.json()
+            // setResult(res)
+            // console.log("Form submission result:", res)
         }catch(error) {
             console.error("Error submitting form:", error)
             alert("An error occurred while submitting the form. Please try again.")
@@ -35,37 +53,48 @@ export default function ResumeForm() {
     }
 
     const handleJobDescriptionChange = (e) => {
-        setJobDescription(e.target.value)
+        if(e.target.value){
+            setJobDescription(e.target.value)
+        }else{
+            setJobDescription(null)
+        }
     }
 
     return (
-        <div>
-            <h2>Resume Form</h2>
-            <form onSubmit={handleSubmit}>
-                <div style={{ marginBottom: "20px" }}>
-                <label>Upload Resume PDF</label>
-                <br />
-                <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={handleFileChange}
-                />
-                </div>
+        <section id="center">
+            <h1>AI Resume Intelligence</h1>
+            {!result &&
+             <form onSubmit={handleSubmit} className="resume-form">
+            <div className="form-group">
+            <label>Upload Resume PDF</label>
+            <br />
+            <input type="file" accept=".pdf" onChange={handleFileChange} />
+            </div>
 
-                <div style={{ marginBottom: "20px" }}>
-                <label>Enter Job Description</label>
-                <br />
-                <textarea
-                    rows="5"
-                    cols="50"
-                    placeholder="Paste the job description here..."
-                    onChange={handleJobDescriptionChange}
-                />
-                </div>
+            <div className="form-group">
+            <label>Enter Job Description</label>
+            <br />
+            <textarea
+                rows="5"
+                cols="50"
+                placeholder="Paste the job description here..."
+                onChange={handleJobDescriptionChange}
+                value={jobDescription}
+            />
+            </div>
 
-                <button type="submit">Submit</button>
-
-            </form>
-        </div>
+            <button type="submit">Submit</button>
+        </form>
+            }
+            
+        {loading && <LoadingSpinner/>}
+        {result && <>
+            <AnalyzeResult result={result} />
+            <button type="button" onClick={() => setResult(null)}>
+            Analyze another resume
+            </button>
+     </>}
+        </section>
+        
     )
 }
